@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { GoogleGenAI, Type } from "@google/genai";
-import { Moon, BookOpen, Calendar, RefreshCw, ChevronRight, Code, Sparkles, Coffee, Play, ExternalLink, Languages, HelpCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Moon, BookOpen, Calendar, RefreshCw, ChevronRight, Code, Sparkles, Coffee, Play, ExternalLink, Languages, HelpCircle, CheckCircle, XCircle, Volume2, CloudMoon } from 'lucide-react';
 
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -53,6 +53,26 @@ interface QuizContent {
   explanation: BilingualText;
 }
 
+interface StoryContent {
+  title: BilingualText;
+  story: string;
+  summary: string;
+}
+
+// --- Helper Functions ---
+
+const speak = (text: string) => {
+  if (!window.speechSynthesis) return;
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.9; // Slightly slower for study
+  utterance.pitch = 1;
+  window.speechSynthesis.speak(utterance);
+};
+
 // --- Components ---
 
 const LoadingSkeleton = () => (
@@ -75,7 +95,16 @@ const DailyCard = ({ content, loading, showTranslation, onRefresh }: { content: 
         <div className="flex items-start justify-between mb-8">
           <div>
             <span className="text-night-highlight text-sm font-mono uppercase tracking-widest font-semibold">Word of the Night</span>
-            <h2 className="text-4xl md:text-5xl font-serif text-white mt-3 font-medium tracking-tight">{content.word}</h2>
+            <div className="flex items-center gap-3 mt-3">
+              <h2 className="text-4xl md:text-5xl font-serif text-white font-medium tracking-tight">{content.word}</h2>
+              <button 
+                onClick={(e) => { e.stopPropagation(); speak(content.word); }}
+                className="p-2 rounded-full bg-night-800 hover:bg-night-700 text-night-accent transition-colors"
+                aria-label="Listen to pronunciation"
+              >
+                <Volume2 className="w-6 h-6" />
+              </button>
+            </div>
             <p className="text-night-muted font-mono text-lg mt-2">{content.pronunciation}</p>
           </div>
           <div className="bg-night-900/50 p-3 rounded-full">
@@ -89,8 +118,15 @@ const DailyCard = ({ content, loading, showTranslation, onRefresh }: { content: 
           </p>
         </div>
 
-        <div className="bg-night-900/30 rounded-2xl p-6 border-l-4 border-night-highlight mb-8">
-          <p className="text-lg text-night-muted italic leading-relaxed font-serif">
+        <div className="bg-night-900/30 rounded-2xl p-6 border-l-4 border-night-highlight mb-8 relative group">
+          <button 
+            onClick={() => speak(content.exampleSentence.en)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-night-800/50 hover:bg-night-700 text-night-muted hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+            aria-label="Listen to example"
+          >
+            <Volume2 className="w-4 h-4" />
+          </button>
+          <p className="text-lg text-night-muted italic leading-relaxed font-serif pr-8">
             "{showTranslation ? content.exampleSentence.kr : content.exampleSentence.en}"
           </p>
         </div>
@@ -423,12 +459,84 @@ const WatchCard = ({ content, loading, onSearch }: { content: WatchContent | nul
   );
 };
 
+const StoryCard = ({ content, loading, onGenerate }: { content: StoryContent | null, loading: boolean, onGenerate: () => void }) => {
+  if (loading) return <div className="max-w-3xl mx-auto"><LoadingSkeleton /></div>;
+
+  if (!content) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center p-6 space-y-8 animate-fade-in max-w-3xl mx-auto">
+        <div className="w-24 h-24 bg-night-800/50 rounded-full flex items-center justify-center mb-4 ring-1 ring-night-700">
+          <CloudMoon className="w-12 h-12 text-night-accent" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-3">Bedtime Code Story</h2>
+          <p className="text-xl text-night-muted max-w-lg mx-auto leading-relaxed">
+            Listen to a soothing metaphor explaining a complex Java concept to help you drift off while learning.
+          </p>
+        </div>
+        <button 
+          onClick={onGenerate}
+          className="bg-night-accent hover:bg-indigo-400 text-night-900 font-bold text-lg py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-indigo-500/20"
+        >
+          Tell me a Story
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 animate-fade-in pb-32 max-w-3xl mx-auto">
+      <div className="bg-night-800/40 border border-night-700/50 rounded-3xl p-8 md:p-10 backdrop-blur-sm shadow-2xl">
+        <div className="flex items-center justify-between mb-8">
+           <div className="flex items-center gap-3">
+              <CloudMoon className="w-6 h-6 text-night-highlight" />
+              <span className="text-night-highlight text-sm font-mono uppercase tracking-widest font-semibold">Code Lullaby</span>
+           </div>
+           <button 
+              onClick={() => speak(content.story)}
+              className="p-3 rounded-full bg-night-900/50 hover:bg-night-700 text-night-accent transition-colors flex items-center gap-2"
+           >
+             <Volume2 className="w-5 h-5" />
+             <span className="text-sm font-medium">Read Aloud</span>
+           </button>
+        </div>
+        
+        <h2 className="text-3xl md:text-4xl font-serif text-white mb-8 leading-tight">
+          {content.title.en}
+        </h2>
+
+        <div className="prose prose-invert prose-lg max-w-none text-night-text leading-loose font-serif">
+          {content.story.split('\n').map((paragraph, i) => (
+             <p key={i} className="mb-6 text-gray-300 opacity-90">{paragraph}</p>
+          ))}
+        </div>
+
+        <div className="mt-10 pt-8 border-t border-night-700/30">
+          <h3 className="text-sm font-bold text-night-muted uppercase tracking-widest mb-4">Summary (Korean)</h3>
+          <p className="text-lg text-night-text leading-relaxed">
+            {content.summary}
+          </p>
+        </div>
+      </div>
+
+      <button 
+        onClick={onGenerate}
+        className="w-full py-6 flex items-center justify-center gap-3 text-night-muted hover:text-white transition-colors text-lg font-medium group"
+      >
+        <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+        <span>Tell another story</span>
+      </button>
+    </div>
+  );
+};
+
 const App = () => {
-  const [activeTab, setActiveTab] = useState<'daily' | 'quiz' | 'plan' | 'watch'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'quiz' | 'plan' | 'watch' | 'story'>('daily');
   const [dailyContent, setDailyContent] = useState<DailyContent | null>(null);
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan | null>(null);
   const [watchContent, setWatchContent] = useState<WatchContent | null>(null);
   const [quizContent, setQuizContent] = useState<QuizContent | null>(null);
+  const [storyContent, setStoryContent] = useState<StoryContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
 
@@ -607,6 +715,37 @@ const App = () => {
     }
   };
 
+  const fetchStoryContent = async () => {
+    setLoading(true);
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: "Explain a core Java concept (e.g., Garbage Collection, JVM, Thread Pool, HashMaps) as a soothing bedtime story. Use metaphors (e.g., a diligent cleaner, a busy librarian). The tone should be relaxing and narrative. Provide the story in English and a brief summary in Korean.",
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: { 
+                type: Type.OBJECT,
+                properties: { en: { type: Type.STRING }, kr: { type: Type.STRING } }
+              },
+              story: { type: Type.STRING, description: "The bedtime story in English" },
+              summary: { type: Type.STRING, description: "Summary in Korean" }
+            }
+          }
+        }
+      });
+
+      const data = JSON.parse(response.text);
+      setStoryContent(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!dailyContent) {
       fetchDailyContent();
@@ -647,10 +786,10 @@ const App = () => {
       <main className="pt-28 px-6 max-w-3xl mx-auto min-h-screen">
         
         {/* Navigation Tabs */}
-        <div className="flex p-1.5 bg-night-900/80 rounded-2xl mb-10 border border-night-800 overflow-hidden shadow-lg sticky top-24 z-40 backdrop-blur-md">
+        <div className="flex p-1.5 bg-night-900/80 rounded-2xl mb-10 border border-night-800 overflow-x-auto shadow-lg sticky top-24 z-40 backdrop-blur-md">
           <button 
             onClick={() => setActiveTab('daily')}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
+            className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
               activeTab === 'daily' 
                 ? 'bg-night-800 text-white shadow-md ring-1 ring-night-700' 
                 : 'text-night-muted hover:text-night-text hover:bg-night-800/50'
@@ -661,18 +800,18 @@ const App = () => {
           </button>
           <button 
             onClick={() => setActiveTab('quiz')}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
+            className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
               activeTab === 'quiz' 
                 ? 'bg-night-800 text-white shadow-md ring-1 ring-night-700' 
                 : 'text-night-muted hover:text-night-text hover:bg-night-800/50'
             }`}
           >
             <HelpCircle className="w-5 h-5" />
-            Quiz
+            <span className="hidden sm:inline">Quiz</span>
           </button>
           <button 
             onClick={() => setActiveTab('plan')}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
+            className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
               activeTab === 'plan' 
                 ? 'bg-night-800 text-white shadow-md ring-1 ring-night-700' 
                 : 'text-night-muted hover:text-night-text hover:bg-night-800/50'
@@ -683,7 +822,7 @@ const App = () => {
           </button>
           <button 
             onClick={() => setActiveTab('watch')}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
+            className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
               activeTab === 'watch' 
                 ? 'bg-night-800 text-white shadow-md ring-1 ring-night-700' 
                 : 'text-night-muted hover:text-night-text hover:bg-night-800/50'
@@ -691,6 +830,17 @@ const App = () => {
           >
             <Play className="w-5 h-5" />
             <span className="hidden sm:inline">Watch</span>
+          </button>
+           <button 
+            onClick={() => setActiveTab('story')}
+            className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all rounded-xl ${
+              activeTab === 'story' 
+                ? 'bg-night-800 text-white shadow-md ring-1 ring-night-700' 
+                : 'text-night-muted hover:text-night-text hover:bg-night-800/50'
+            }`}
+          >
+            <CloudMoon className="w-5 h-5" />
+            <span className="hidden sm:inline">Story</span>
           </button>
         </div>
 
@@ -716,11 +866,17 @@ const App = () => {
             showTranslation={showTranslation}
             onGenerate={generatePlan}
           />
-        ) : (
+        ) : activeTab === 'watch' ? (
           <WatchCard 
             content={watchContent}
             loading={loading}
             onSearch={fetchWatchContent}
+          />
+        ) : (
+          <StoryCard 
+            content={storyContent}
+            loading={loading}
+            onGenerate={fetchStoryContent}
           />
         )}
 
