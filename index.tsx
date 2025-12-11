@@ -3,6 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Moon, BookOpen, Calendar, RefreshCw, ChevronRight, Code, Sparkles, Coffee, Play, ExternalLink, Languages, HelpCircle, CheckCircle, XCircle, Volume2, CloudMoon } from 'lucide-react';
 
+declare global {
+  interface Window {
+    Prism: any;
+  }
+}
+
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -75,6 +81,30 @@ const speak = (text: string) => {
 
 // --- Components ---
 
+const CodeBlock = ({ code }: { code: string }) => {
+  useEffect(() => {
+    if (window.Prism) {
+      window.Prism.highlightAll();
+    }
+  }, [code]);
+
+  return (
+    <div className="mt-8 rounded-2xl overflow-hidden bg-[#2d2d2d] border border-night-800 shadow-xl">
+       <div className="flex items-center justify-between px-4 py-3 bg-night-900/80 border-b border-night-800">
+         <div className="flex gap-2">
+           <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
+           <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+           <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
+         </div>
+         <span className="text-xs font-mono text-night-muted font-medium">Java</span>
+       </div>
+       <div className="p-6 md:p-8 overflow-x-auto">
+          <pre className="font-mono text-sm md:text-base leading-loose min-w-max"><code className="language-java">{code}</code></pre>
+       </div>
+    </div>
+  );
+};
+
 const LoadingSkeleton = () => (
   <div className="w-full animate-pulse space-y-6">
     <div className="h-12 bg-night-800 rounded-lg w-1/3"></div>
@@ -93,13 +123,13 @@ const DailyCard = ({ content, loading, showTranslation, onRefresh }: { content: 
       {/* English Section */}
       <div className="bg-night-800/40 border border-night-700/50 rounded-3xl p-8 md:p-10 backdrop-blur-sm shadow-2xl">
         <div className="flex items-start justify-between mb-8">
-          <div>
+          <div className="min-w-0 flex-1 pr-4">
             <span className="text-night-highlight text-sm font-mono uppercase tracking-widest font-semibold">Word of the Night</span>
-            <div className="flex items-center gap-3 mt-3">
-              <h2 className="text-4xl md:text-5xl font-serif text-white font-medium tracking-tight">{content.word}</h2>
+            <div className="flex items-center gap-3 mt-3 min-w-0">
+              <h2 className="text-4xl md:text-5xl font-serif text-white font-medium tracking-tight break-words min-w-0">{content.word}</h2>
               <button 
                 onClick={(e) => { e.stopPropagation(); speak(content.word); }}
-                className="p-2 rounded-full bg-night-800 hover:bg-night-700 text-night-accent transition-colors"
+                className="p-2 rounded-full bg-night-800 hover:bg-night-700 text-night-accent transition-colors flex-shrink-0"
                 aria-label="Listen to pronunciation"
               >
                 <Volume2 className="w-6 h-6" />
@@ -107,13 +137,13 @@ const DailyCard = ({ content, loading, showTranslation, onRefresh }: { content: 
             </div>
             <p className="text-night-muted font-mono text-lg mt-2">{content.pronunciation}</p>
           </div>
-          <div className="bg-night-900/50 p-3 rounded-full">
+          <div className="bg-night-900/50 p-3 rounded-full flex-shrink-0">
             <BookOpen className="text-night-highlight w-8 h-8" />
           </div>
         </div>
         
         <div className="mb-8">
-          <p className="text-xl md:text-2xl text-night-text leading-relaxed font-light">
+          <p className="text-xl md:text-2xl text-night-text leading-relaxed font-light break-words">
             {showTranslation ? content.definition.kr : content.definition.en}
           </p>
         </div>
@@ -126,14 +156,14 @@ const DailyCard = ({ content, loading, showTranslation, onRefresh }: { content: 
           >
             <Volume2 className="w-4 h-4" />
           </button>
-          <p className="text-lg text-night-muted italic leading-relaxed font-serif pr-8">
+          <p className="text-lg text-night-muted italic leading-relaxed font-serif pr-8 break-words">
             "{showTranslation ? content.exampleSentence.kr : content.exampleSentence.en}"
           </p>
         </div>
 
         <div className="pt-6 border-t border-night-700/50">
            <h3 className="text-base font-semibold text-night-accent mb-3 uppercase tracking-wide">Dev Context</h3>
-           <p className="text-lg text-night-text leading-relaxed">
+           <p className="text-lg text-night-text leading-relaxed break-words">
              {showTranslation ? content.devContext.kr : content.devContext.en}
            </p>
         </div>
@@ -142,33 +172,19 @@ const DailyCard = ({ content, loading, showTranslation, onRefresh }: { content: 
       {/* Dev Tip Section */}
       <div className="bg-night-800/40 border border-night-700/50 rounded-3xl p-8 md:p-10 backdrop-blur-sm shadow-2xl">
         <div className="flex items-center gap-4 mb-6">
-          <div className="bg-night-900/50 p-3 rounded-xl">
+          <div className="bg-night-900/50 p-3 rounded-xl flex-shrink-0">
              <Code className="w-6 h-6 text-night-accent" />
           </div>
-          <h2 className="text-2xl md:text-3xl font-semibold text-white">
+          <h2 className="text-2xl md:text-3xl font-semibold text-white break-words min-w-0">
             {showTranslation ? content.devTipTitle.kr : content.devTipTitle.en}
           </h2>
         </div>
         
-        <p className="text-lg md:text-xl text-night-text mb-8 leading-loose text-gray-300">
+        <p className="text-lg md:text-xl text-night-text mb-8 leading-loose text-gray-300 break-words">
           {showTranslation ? content.devTipContent.kr : content.devTipContent.en}
         </p>
 
-        {content.codeSnippet && (
-          <div className="mt-8 rounded-2xl overflow-hidden bg-night-950 border border-night-800 shadow-xl">
-             <div className="flex items-center justify-between px-4 py-3 bg-night-900/80 border-b border-night-800">
-               <div className="flex gap-2">
-                 <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                 <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-                 <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
-               </div>
-               <span className="text-xs font-mono text-night-muted font-medium">Java Example</span>
-             </div>
-             <div className="p-6 md:p-8 overflow-x-auto">
-                <pre className="font-mono text-sm md:text-base text-indigo-200 leading-loose whitespace-pre min-w-max">{content.codeSnippet}</pre>
-             </div>
-          </div>
-        )}
+        {content.codeSnippet && <CodeBlock code={content.codeSnippet} />}
       </div>
 
       <button 
@@ -225,29 +241,15 @@ const QuizCard = ({ content, loading, showTranslation, onGenerate }: { content: 
     <div className="space-y-8 animate-fade-in pb-32 max-w-3xl mx-auto">
       <div className="bg-night-800/40 border border-night-700/50 rounded-3xl p-8 md:p-10 backdrop-blur-sm shadow-2xl">
         <div className="flex items-center gap-3 mb-8">
-           <HelpCircle className="w-6 h-6 text-night-highlight" />
+           <HelpCircle className="w-6 h-6 text-night-highlight flex-shrink-0" />
            <span className="text-night-highlight text-sm font-mono uppercase tracking-widest font-semibold">Daily Challenge</span>
         </div>
 
-        <h3 className="text-2xl md:text-3xl font-medium text-white mb-8 leading-snug">
+        <h3 className="text-2xl md:text-3xl font-medium text-white mb-8 leading-snug break-words">
           {showTranslation ? content.question.kr : content.question.en}
         </h3>
 
-        {content.codeSnippet && (
-          <div className="mb-10 rounded-2xl overflow-hidden bg-night-950 border border-night-800 shadow-xl">
-             <div className="flex items-center justify-between px-4 py-3 bg-night-900/80 border-b border-night-800">
-               <div className="flex gap-2">
-                 <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                 <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-                 <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
-               </div>
-               <span className="text-xs font-mono text-night-muted font-medium">Code Snippet</span>
-             </div>
-             <div className="p-6 md:p-8 overflow-x-auto">
-                <pre className="font-mono text-sm md:text-base text-indigo-200 leading-loose whitespace-pre min-w-max">{content.codeSnippet}</pre>
-             </div>
-          </div>
-        )}
+        {content.codeSnippet && <CodeBlock code={content.codeSnippet} />}
 
         <div className="space-y-4">
           {content.options.map((option, idx) => {
@@ -260,10 +262,10 @@ const QuizCard = ({ content, loading, showTranslation, onGenerate }: { content: 
             if (isRevealed) {
               if (isCorrect) {
                 buttonStyle = "bg-green-900/20 border-green-500/50 text-green-100 ring-1 ring-green-500/50";
-                icon = <CheckCircle className="w-6 h-6 text-green-400" />;
+                icon = <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 ml-2" />;
               } else if (isSelected) {
                 buttonStyle = "bg-red-900/20 border-red-500/50 text-red-100 ring-1 ring-red-500/50";
-                icon = <XCircle className="w-6 h-6 text-red-400" />;
+                icon = <XCircle className="w-6 h-6 text-red-400 flex-shrink-0 ml-2" />;
               } else {
                 buttonStyle = "opacity-40 border-night-800";
               }
@@ -278,7 +280,7 @@ const QuizCard = ({ content, loading, showTranslation, onGenerate }: { content: 
                 disabled={isRevealed}
                 className={`w-full p-6 md:p-8 rounded-2xl border flex items-center justify-between transition-all text-left group ${buttonStyle}`}
               >
-                <span className="text-lg md:text-xl font-medium">
+                <span className="text-lg md:text-xl font-medium break-words">
                   {showTranslation ? option.kr : option.en}
                 </span>
                 {icon}
@@ -290,7 +292,7 @@ const QuizCard = ({ content, loading, showTranslation, onGenerate }: { content: 
         {isRevealed && (
           <div className="mt-10 p-8 bg-night-900/60 rounded-2xl border border-night-700/50 animate-fade-in">
             <h4 className="text-base font-semibold text-night-highlight mb-3 uppercase tracking-wide">Explanation</h4>
-            <p className="text-lg text-night-text leading-loose">
+            <p className="text-lg text-night-text leading-loose break-words">
               {showTranslation ? content.explanation.kr : content.explanation.en}
             </p>
           </div>
@@ -337,7 +339,7 @@ const PlanCard = ({ plan, loading, showTranslation, onGenerate }: { plan: Weekly
     <div className="space-y-8 animate-fade-in pb-32 max-w-3xl mx-auto">
       <div className="bg-gradient-to-r from-night-800 to-night-900 border border-night-700/50 rounded-3xl p-8 md:p-10 shadow-2xl">
         <h2 className="text-night-highlight text-sm uppercase tracking-widest font-semibold mb-3">Weekly Goal</h2>
-        <h3 className="text-2xl md:text-3xl font-semibold text-white leading-tight">
+        <h3 className="text-2xl md:text-3xl font-semibold text-white leading-tight break-words">
           {showTranslation ? plan.goal.kr : plan.goal.en}
         </h3>
       </div>
@@ -347,25 +349,25 @@ const PlanCard = ({ plan, loading, showTranslation, onGenerate }: { plan: Weekly
           <div key={idx} className="bg-night-800/20 border border-night-700/30 rounded-2xl p-6 md:p-8 hover:bg-night-800/40 transition-all hover:border-night-600/50">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
               <span className="font-mono text-night-highlight text-lg font-bold">{day.day}</span>
-              <span className="text-sm text-night-muted flex items-center gap-2 bg-night-900/50 px-3 py-1 rounded-full w-fit">
+              <span className="text-sm text-night-muted flex items-center gap-2 bg-night-900/50 px-3 py-1 rounded-full w-fit flex-shrink-0">
                 <Coffee className="w-4 h-4" /> {day.duration}
               </span>
             </div>
             <div className="mb-6">
-                 <h4 className="text-xl text-white font-medium leading-relaxed">
+                 <h4 className="text-xl text-white font-medium leading-relaxed break-words">
                    {showTranslation ? day.topic.kr : day.topic.en}
                  </h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-night-800/50">
               <div>
                 <span className="text-xs text-night-muted uppercase tracking-wider font-semibold block mb-2">English Focus</span>
-                <p className="text-base text-gray-300">
+                <p className="text-base text-gray-300 break-words">
                   {showTranslation ? day.englishFocus.kr : day.englishFocus.en}
                 </p>
               </div>
               <div>
                 <span className="text-xs text-night-muted uppercase tracking-wider font-semibold block mb-2">Dev Focus</span>
-                <p className="text-base text-gray-300">
+                <p className="text-base text-gray-300 break-words">
                    {showTranslation ? day.devFocus.kr : day.devFocus.en}
                 </p>
               </div>
@@ -414,13 +416,13 @@ const WatchCard = ({ content, loading, onSearch }: { content: WatchContent | nul
     <div className="space-y-8 animate-fade-in pb-32 max-w-3xl mx-auto">
       <div className="bg-night-800/40 border border-night-700/50 rounded-3xl p-8 md:p-10 backdrop-blur-sm shadow-2xl">
         <div className="flex items-center gap-3 mb-8">
-           <Play className="w-6 h-6 text-night-highlight" />
+           <Play className="w-6 h-6 text-night-highlight flex-shrink-0" />
            <span className="text-night-highlight text-sm font-mono uppercase tracking-widest font-semibold">Recommended Watch</span>
         </div>
         
         <div className="prose prose-invert prose-lg max-w-none text-night-text leading-loose">
           {content.text.split('\n').map((line, i) => (
-             <p key={i} className="mb-4 text-gray-300">{line}</p>
+             <p key={i} className="mb-4 text-gray-300 break-words">{line}</p>
           ))}
         </div>
       </div>
@@ -437,7 +439,7 @@ const WatchCard = ({ content, loading, onSearch }: { content: WatchContent | nul
               className="block bg-night-800/40 border border-night-700/50 rounded-2xl p-6 hover:border-night-accent hover:bg-night-800/60 transition-all group shadow-lg"
             >
               <div className="flex items-start justify-between gap-4">
-                <span className="text-xl font-medium text-night-text group-hover:text-white leading-snug">{source.title}</span>
+                <span className="text-xl font-medium text-night-text group-hover:text-white leading-snug break-words">{source.title}</span>
                 <ExternalLink className="w-5 h-5 text-night-muted group-hover:text-night-accent flex-shrink-0 mt-1" />
               </div>
               <div className="mt-2 text-sm text-night-muted truncate font-mono opacity-60">
@@ -494,26 +496,26 @@ const StoryCard = ({ content, loading, onGenerate }: { content: StoryContent | n
            </div>
            <button 
               onClick={() => speak(content.story)}
-              className="p-3 rounded-full bg-night-900/50 hover:bg-night-700 text-night-accent transition-colors flex items-center gap-2"
+              className="p-3 rounded-full bg-night-900/50 hover:bg-night-700 text-night-accent transition-colors flex items-center gap-2 flex-shrink-0"
            >
              <Volume2 className="w-5 h-5" />
              <span className="text-sm font-medium">Read Aloud</span>
            </button>
         </div>
         
-        <h2 className="text-3xl md:text-4xl font-serif text-white mb-8 leading-tight">
+        <h2 className="text-3xl md:text-4xl font-serif text-white mb-8 leading-tight break-words">
           {content.title.en}
         </h2>
 
         <div className="prose prose-invert prose-lg max-w-none text-night-text leading-loose font-serif">
           {content.story.split('\n').map((paragraph, i) => (
-             <p key={i} className="mb-6 text-gray-300 opacity-90">{paragraph}</p>
+             <p key={i} className="mb-6 text-gray-300 opacity-90 break-words">{paragraph}</p>
           ))}
         </div>
 
         <div className="mt-10 pt-8 border-t border-night-700/30">
           <h3 className="text-sm font-bold text-night-muted uppercase tracking-widest mb-4">Summary (Korean)</h3>
-          <p className="text-lg text-night-text leading-relaxed">
+          <p className="text-lg text-night-text leading-relaxed break-words">
             {content.summary}
           </p>
         </div>

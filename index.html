@@ -6,6 +6,11 @@
     <title>Bedtime Dev</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- PrismJS for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -59,6 +64,17 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #475569; 
       }
+      /* PrismJS Custom Overrides */
+      pre[class*="language-"] {
+        background: transparent !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-shadow: none !important;
+      }
+      code[class*="language-"], pre[class*="language-"] {
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: inherit !important;
+      }
     </style>
   <script type="importmap">
 {
@@ -67,7 +83,7 @@
     "react/": "https://esm.sh/react@^19.2.1/",
     "react": "https://esm.sh/react@^19.2.1",
     "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.559.0"
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0"
   }
 }
 </script>
